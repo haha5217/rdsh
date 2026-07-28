@@ -10,9 +10,10 @@
 
 ## 文件说明
 
-- `public/index.html`：新版网页，单文件源码，可直接维护。
+- `public/index.html`：新版单人审核网页，单文件源码，可直接维护。
+- `public/icon.png`：网站图标和浏览器标签图标。
 - `public/_headers`：Cloudflare Pages响应头设置。
 - `public/_redirects`：单页访问回退规则。
 - `original/rdsh-original-index.html`：从原网站恢复的旧版完整源码，仅供留档，不参与部署。
 
-网站数据仅保存在当前浏览器本地存储中，不上传身份证号等录入数据。
+新版采用逐项填写、单人审核和结果卡片形式，不包含批量表格、CSV导出、打印及审核口径说明。网站数据仅保存在当前浏览器本地存储中。
