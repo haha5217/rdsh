@@ -303,9 +303,9 @@
       <form id="reviewForm" novalidate>
         <div class="questions">
           <label class="question">
-            <span class="question-label">姓名 <em>必填</em></span>
-            <input id="name" maxlength="30" autocomplete="name" placeholder="请输入姓名">
-            <small class="error" id="nameError" hidden></small>
+            <span class="question-label">身份证号 <em>必填</em></span>
+            <input id="idCard" maxlength="18" inputmode="text" autocomplete="off" placeholder="请输入15位或18位身份证号">
+            <small class="error" id="idError" hidden></small>
           </label>
 
           <label class="question">
@@ -316,9 +316,8 @@
           </label>
 
           <label class="question">
-            <span class="question-label">身份证号 <em class="optional">选填</em></span>
-            <input id="idCard" maxlength="18" inputmode="text" autocomplete="off" placeholder="用于核验倒推申请时是否满18周岁">
-            <small class="error" id="idError" hidden></small>
+            <span class="question-label">姓名 <em class="optional">选填</em></span>
+            <input id="name" maxlength="30" autocomplete="name" placeholder="请输入姓名">
           </label>
 
           <label class="question">
@@ -448,11 +447,10 @@
       const birth = idValue ? birthdayFromId(idValue) : null;
       const join = parseDate(fields.joinDate.value);
       const regular = fields.regularDate.value ? parseDate(fields.regularDate.value) : null;
-      showError('nameError', fields.name.value.trim() ? '' : '请填写姓名。');
-      showError('idError', !idValue || birth ? '' : '请输入有效的身份证号，或将此项留空。');
+      showError('idError', birth ? '' : '请输入有效的身份证号。');
       showError('joinError', join ? '' : '请选择接收为预备党员日期。');
       showError('regularError', !fields.regularDate.value || regular ? '' : '请选择有效的转正日期，或将此项留空。');
-      return fields.name.value.trim() && (!idValue || birth) && join && (!fields.regularDate.value || regular)
+      return birth && join && (!fields.regularDate.value || regular)
         ? { birth, join, regular }
         : null;
     }
@@ -474,16 +472,12 @@
       cards.push(checkCard('pass', '积极分子培养考察', `按至少一年培养考察倒推，确定入党积极分子最晚参考日期为${formatDate(activistLatest)}。`, '已推算'));
       cards.push(checkCard('warn', '确定发展对象', `应在${formatDate(data.join)}接收为预备党员前按程序完成。该环节至接收预备党员没有全国统一固定最短期限，需结合档案核对。`, '待核对'));
 
-      if (data.birth) {
-        const age18 = addYears(data.birth, 18);
-        if (applicationLatest < age18) {
-          failCount += 1;
-          cards.push(checkCard('fail', '申请入党年龄', `按正常程序倒推，申请书最晚参考日期${formatDate(applicationLatest)}早于满18周岁日期${formatDate(age18)}。`, '不合理'));
-        } else {
-          cards.push(checkCard('pass', '申请入党年龄', `按最晚参考日期倒推，申请时为${ageText(data.birth, applicationLatest)}。`, '未见异常'));
-        }
+      const age18 = addYears(data.birth, 18);
+      if (applicationLatest < age18) {
+        failCount += 1;
+        cards.push(checkCard('fail', '申请入党年龄', `按正常程序倒推，申请书最晚参考日期${formatDate(applicationLatest)}早于满18周岁日期${formatDate(age18)}。`, '不合理'));
       } else {
-        cards.push(checkCard('warn', '申请入党年龄', '未填写身份证号，无法核验按正常程序倒推时是否已满18周岁。', '未核验'));
+        cards.push(checkCard('pass', '申请入党年龄', `按最晚参考日期倒推，申请时为${ageText(data.birth, applicationLatest)}。`, '未见异常'));
       }
 
       if (!data.regular) {
@@ -501,9 +495,10 @@
         cards.push(checkCard('pass', '转正时间', `转正日期与正常预备期满日${formatDate(expectedRegular)}一致。`, '符合'));
       }
 
-      const hasOptionalEvidence = Boolean(data.birth && data.regular);
+      const hasOptionalEvidence = Boolean(data.regular);
       const verdict = failCount ? '不合理' : warnCount ? '需核实' : hasOptionalEvidence ? '未见异常' : '推算完成';
-      document.getElementById('resultTitle').textContent = `${fields.name.value.trim()}审核结果`;
+      const displayName = fields.name.value.trim();
+      document.getElementById('resultTitle').textContent = displayName ? `${displayName}审核结果` : '审核结果';
       document.getElementById('verdict').textContent = verdict;
       document.getElementById('joinValue').textContent = formatDate(data.join);
       document.getElementById('applyLatestValue').textContent = formatDate(applicationLatest);
