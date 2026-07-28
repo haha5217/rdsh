@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>乾安县发展党员时间合理性审核工具</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --line: #dcdfe6;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --ok: #15803d;
+      --warn: #b45309;
+      --bad: #b91c1c;
+      --soft-blue: #eef2ff;
+      --manual-blue: #dbeafe;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1500px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 24px;
+      line-height: 1.4;
+    }
+
+    .desc {
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: 14px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 16px 0;
+    }
+
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 9px 14px;
+      background: var(--primary);
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button.secondary { background: #4b5563; }
+    button.danger { background: #dc2626; }
+    button:hover { opacity: 0.9; }
+
+    .table-wrap {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: auto;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1420px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      padding: 8px;
+      text-align: center;
+      font-size: 13px;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: var(--soft-blue);
+      z-index: 1;
+      font-weight: 700;
+    }
+
+    th.manual { background: var(--manual-blue); }
+    td:last-child, th:last-child { border-right: none; }
+
+    input, select {
+      width: 100%;
+      min-width: 90px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 7px 8px;
+      font-size: 13px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    input.idcard { min-width: 180px; }
+
+    .date-field {
+      display: grid;
+      gap: 6px;
+      min-width: 210px;
+    }
+
+    .date-text {
+      min-width: 190px;
+    }
+
+    .date-selects {
+      display: grid;
+      grid-template-columns: 1fr 0.8fr 0.8fr;
+      gap: 5px;
+    }
+
+    .date-tip {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.2;
+      text-align: left;
+    }
+
+    .result-ok { color: var(--ok); font-weight: 700; }
+    .result-warn { color: var(--warn); font-weight: 700; }
+    .result-bad { color: var(--bad); font-weight: 700; }
+    .muted { color: var(--muted); }
+
+    .note {
+      margin-top: 16px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px 20px;
+      line-height: 1.9;
+      font-size: 14px;
+    }
+
+    .note h2 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+
+    .note p { margin: 4px 0; }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 12px;
+        background: #f3f4f6;
+      }
+
+      .header {
+        padding: 16px;
+        border-radius: 12px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      .desc {
+        font-size: 13px;
+      }
+
+      .toolbar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      button {
+        width: 100%;
+        padding: 10px 8px;
+        font-size: 14px;
+      }
+
+      .table-wrap {
+        border: none;
+        background: transparent;
+        box-shadow: none;
+        overflow: visible;
+      }
+
+      table,
+      thead,
+      tbody,
+      tr,
+      th,
+      td {
+        display: block;
+        width: 100%;
+      }
+
+      table {
+        min-width: 0;
+        border-collapse: separate;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tr {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        margin-bottom: 12px;
+        padding: 12px;
+        box-shadow: 0 3px 10px rgba(15, 23, 42, 0.05);
+      }
+
+      td {
+        border: none;
+        border-bottom: 1px solid #eef2f7;
+        padding: 9px 0;
+        display: grid;
+        grid-template-columns: 40% 60%;
+        align-items: start;
+        gap: 8px;
+        text-align: left;
+        white-space: normal;
+        min-height: 40px;
+      }
+
+      td:last-child {
+        border-bottom: none;
+        display: block;
+        padding-top: 12px;
+      }
+
+      td::before {
+        content: attr(data-label);
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 600;
+        padding-top: 7px;
+      }
+
+      td:last-child::before {
+        content: "";
+      }
+
+      .indexCell {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--primary);
+      }
+
+      .indexCell::before {
+        content: "第 " attr(data-index) " 条";
+        color: var(--primary);
+        font-size: 16px;
+      }
+
+      .indexCell {
+        color: transparent;
+      }
+
+      input,
+      input.idcard,
+      select {
+        min-width: 0;
+        width: 100%;
+        height: 36px;
+        font-size: 15px;
+      }
+
+      .date-field {
+        min-width: 0;
+        width: 100%;
+      }
+
+      .date-selects {
+        grid-template-columns: 1.2fr 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      td {
+        grid-template-columns: 1fr;
+        gap: 5px;
+      }
+
+      td::before {
+        font-size: 12px;
+        padding-top: 0;
+      }
+    }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .toolbar, .note { display: none; }
+      .header { box-shadow: none; border: none; }
+      .table-wrap { box-shadow: none; border: none; overflow: visible; }
+      button { display: none; }
+      th { position: static; }
+      input, select { border: none; }
+      .date-selects, .date-tip { display: none; }
+    }
+
+    /* 乾安县党务工具统一样式 */
+    :root {
+      --bg: #f3efe8;
+      --card: #fffdf8;
+      --line: #ded7ce;
+      --text: #25211e;
+      --muted: #6f6861;
+      --primary: #8d1f24;
+      --ok: #2d6a4f;
+      --warn: #9a6518;
+      --bad: #a2252b;
+      --soft-blue: #68151a;
+      --manual-blue: #8d1f24;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 12% 8%, rgba(183, 138, 66, .09), transparent 28rem),
+        linear-gradient(180deg, #f8f5ef 0, var(--bg) 100%);
+    }
+
+    .header, .table-wrap, .note {
+      background: rgba(255, 253, 248, .97);
+      border-color: rgba(103, 85, 68, .16);
+      box-shadow: 0 18px 54px rgba(57, 43, 28, .08);
+    }
+
+    .header { border-radius: 22px 22px 22px 7px; }
+
+    h1 {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      margin: 0;
+      font-family: SimHei, "Microsoft YaHei", sans-serif;
+      font-weight: 400;
+      font-size: 25px;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      display: inline-grid;
+      place-items: center;
+      flex: 0 0 auto;
+      color: #fff;
+      background: var(--primary);
+      border-radius: 12px 12px 12px 4px;
+      font-size: 22px;
+    }
+
+    button { background: var(--primary); font-weight: 700; }
+    button.secondary { background: #665c51; }
+    button.danger { background: #a2252b; }
+    input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(141,31,36,.1); }
+
+    .table-wrap { border-radius: 16px 16px 16px 5px; }
+    th { color: #fff; background: var(--soft-blue); }
+    th.manual { color: #fff; background: var(--manual-blue); }
+    tbody tr:hover { background: #fcf8f1; }
+    .note { border-radius: 14px 14px 14px 5px; }
+    .note h2 { color: var(--primary); font-family: SimHei, "Microsoft YaHei", sans-serif; font-weight: 400; }
+
+    @media (max-width: 768px) {
+      body { background: var(--bg); }
+      tr { border-radius: 15px 15px 15px 5px; background: var(--card); }
+      .indexCell::before { color: var(--primary); }
+    }
+
+    @media print {
+      @page { size: landscape; margin: 10mm; }
+      html, body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .header, .toolbar, .note { display: none !important; }
+      .container { max-width: none; }
+      .table-wrap { border: 1px solid var(--line); border-radius: 10px; }
+      table { min-width: 0; font-size: 8px; }
+      thead { display: table-header-group; }
+      tr { break-inside: avoid; }
+      th { color: #fff !important; background: var(--soft-blue) !important; }
+      th.manual { background: var(--manual-blue) !important; }
+      th, td { padding: 6px 5px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1><span class="brand-mark">党</span><span>乾安县发展党员时间合理性审核工具</span></h1>
+    </div>
+
+    <div class="toolbar">
+      <button onclick="addRow()">新增一行</button>
+      <button class="secondary" onclick="exportCSV()">导出CSV</button>
+      <button class="secondary" onclick="window.print()">打印</button>
+      <button class="danger" onclick="clearRows()">清空数据</button>
+    </div>
+
+    <div class="table-wrap">
+      <table id="reviewTable">
+        <thead>
+          <tr>
+            <th style="width: 54px;">序号</th>
+            <th class="manual">身份证号</th>
+            <th class="manual">入党时间</th>
+            <th class="manual">转正时间</th>
+            <th>出生日期</th>
+            <th>满18周岁日期</th>
+            <th>理论最早接收预备党员日期</th>
+            <th>确定积极分子最晚日期</th>
+            <th>一年培养条件审核</th>
+            <th>入党时年龄</th>
+            <th>入党年龄审核</th>
+            <th>转正间隔</th>
+            <th>转正时间审核</th>
+            <th>综合结论</th>
+            <th>备注</th>
+            <th style="width: 70px;">操作</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <h2>审核口径</h2>
+      <p>1. 身份证号用于自动识别出生日期，支持18位身份证号，15位身份证号按19XX年转换。</p>
+      <p>2. 申请入党必须年满18周岁；现行规定未设定“递交申请书后满6个月才能确定为入党积极分子”的全国统一期限。</p>
+      <p>3. 入党积极分子列为发展对象前，必须经过一年以上培养教育和考察。本工具据此计算最迟确定积极分子日期，并以满18周岁后至少经过一年培养作为理论最早接收预备党员日期。</p>
+      <p>4. 仅凭身份证号和入党时间不能替代对申请书、积极分子、发展对象、政审、培训、预审和会议材料的逐项审核，综合结论属于快速筛查结果。</p>
+      <p>5. 预备期一般为一年，自支部党员大会通过接收为预备党员之日起计算；延期转正、延长预备期等特殊情形应结合党员档案核实。</p>
+    </div>
+  </div>
+
+  <script>
+    const tbody = document.getElementById('tbody');
+    const START_YEAR = 1940;
+    const END_YEAR = new Date().getFullYear() + 5;
+
+    function pad(n) {
+      return String(n).padStart(2, '0');
+    }
+
+    function formatDate(date) {
+      if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    }
+
+    function parseDate(value) {
+      if (!value) return null;
+      const raw = String(value).trim();
+      let y, m, d;
+
+      if (/^\d{8}$/.test(raw)) {
+        y = Number(raw.slice(0, 4));
+        m = Number(raw.slice(4, 6));
+        d = Number(raw.slice(6, 8));
+      } else {
+        const normalized = raw
+          .replace(/年/g, '-')
+          .replace(/月/g, '-')
+          .replace(/日/g, '')
+          .replace(/[./]/g, '-')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-');
+        const match = normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+        if (!match) return null;
+        y = Number(match[1]);
+        m = Number(match[2]);
+        d = Number(match[3]);
+      }
+
+      const date = new Date(y, m - 1, d);
+      if (date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d) return date;
+      return null;
+    }
+
+    function addYears(date, years) {
+      const d = new Date(date);
+      d.setFullYear(d.getFullYear() + years);
+      return d;
+    }
+
+    function addMonths(date, months) {
+      const d = new Date(date);
+      const originalDay = d.getDate();
+      d.setMonth(d.getMonth() + months);
+      if (d.getDate() !== originalDay) d.setDate(0);
+      return d;
+    }
+
+    function daysBetween(start, end) {
+      const ms = end.getTime() - start.getTime();
+      return Math.floor(ms / 86400000);
+    }
+
+    function getBirthdayFromId(id) {
+      const value = (id || '').trim();
+      if (/^\d{17}[\dXx]$/.test(value)) {
+        const weights = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
+        const checks = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'];
+        const sum = value.slice(0, 17).split('').reduce((total, digit, index) => total + Number(digit) * weights[index], 0);
+        if (checks[sum % 11] !== value.slice(17).toUpperCase()) return null;
+        const y = Number(value.slice(6, 10));
+        const m = Number(value.slice(10, 12));
+        const d = Number(value.slice(12, 14));
+        const date = new Date(y, m - 1, d);
+        if (date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d) return date;
+      }
+      if (/^\d{15}$/.test(value)) {
+        const y = Number('19' + value.slice(6, 8));
+        const m = Number(value.slice(8, 10));
+        const d = Number(value.slice(10, 12));
+        const date = new Date(y, m - 1, d);
+        if (date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d) return date;
+      }
+      return null;
+    }
+
+    function getAgeText(birth, date) {
+      if (!birth || !date) return '';
+      let years = date.getFullYear() - birth.getFullYear();
+      let months = date.getMonth() - birth.getMonth();
+      let days = date.getDate() - birth.getDate();
+      if (days < 0) {
+        months -= 1;
+        const prevMonth = new Date(date.getFullYear(), date.getMonth(), 0);
+        days += prevMonth.getDate();
+      }
+      if (months < 0) {
+        years -= 1;
+        months += 12;
+      }
+      return `${years}岁${months}个月${days}天`;
+    }
+
+    function setCell(row, className, text, resultClass) {
+      const cell = row.querySelector(`.${className}`);
+      cell.textContent = text || '';
+      cell.className = className;
+      if (resultClass) cell.classList.add(resultClass);
+    }
+
+    function buildOptions(select, start, end, suffix, selectedValue) {
+      select.innerHTML = `<option value="">${suffix}</option>`;
+      for (let i = start; i <= end; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = `${i}${suffix}`;
+        if (String(selectedValue) === String(i)) option.selected = true;
+        select.appendChild(option);
+      }
+    }
+
+    function daysInMonth(year, month) {
+      if (!year || !month) return 31;
+      return new Date(Number(year), Number(month), 0).getDate();
+    }
+
+    function initDateField(field, value, onChange) {
+      const textInput = field.querySelector('.dateTextInput');
+      const yearSelect = field.querySelector('.yearSelect');
+      const monthSelect = field.querySelector('.monthSelect');
+      const daySelect = field.querySelector('.daySelect');
+
+      buildOptions(yearSelect, START_YEAR, END_YEAR, '年');
+      buildOptions(monthSelect, 1, 12, '月');
+      buildOptions(daySelect, 1, 31, '日');
+
+      if (value) {
+        textInput.value = value;
+        syncSelectsFromText(field);
+      }
+
+      textInput.addEventListener('input', () => {
+        syncSelectsFromText(field);
+        onChange();
+      });
+
+      [yearSelect, monthSelect, daySelect].forEach(select => {
+        select.addEventListener('change', () => {
+          syncTextFromSelects(field);
+          onChange();
+        });
+      });
+    }
+
+    function syncSelectsFromText(field) {
+      const textInput = field.querySelector('.dateTextInput');
+      const yearSelect = field.querySelector('.yearSelect');
+      const monthSelect = field.querySelector('.monthSelect');
+      const date = parseDate(textInput.value);
+      if (!date) return;
+      yearSelect.value = date.getFullYear();
+      monthSelect.value = date.getMonth() + 1;
+      refreshDayOptions(field, date.getDate());
+    }
+
+    function syncTextFromSelects(field) {
+      const textInput = field.querySelector('.dateTextInput');
+      const yearSelect = field.querySelector('.yearSelect');
+      const monthSelect = field.querySelector('.monthSelect');
+      const daySelect = field.querySelector('.daySelect');
+      refreshDayOptions(field, daySelect.value);
+      if (yearSelect.value && monthSelect.value && daySelect.value) {
+        textInput.value = `${yearSelect.value}年${Number(monthSelect.value)}月${Number(daySelect.value)}日`;
+      }
+    }
+
+    function refreshDayOptions(field, selectedDay) {
+      const yearSelect = field.querySelector('.yearSelect');
+      const monthSelect = field.querySelector('.monthSelect');
+      const daySelect = field.querySelector('.daySelect');
+      const maxDay = daysInMonth(yearSelect.value, monthSelect.value);
+      const current = Math.min(Number(selectedDay || daySelect.value || 1), maxDay);
+      buildOptions(daySelect, 1, maxDay, '日', current);
+    }
+
+    function getDateFieldValue(row, name) {
+      return row.querySelector(`[data-date-name="${name}"] .dateTextInput`).value.trim();
+    }
+
+    function recalc(row) {
+      const id = row.querySelector('.idInput').value.trim();
+      const joinDate = parseDate(getDateFieldValue(row, 'join'));
+      const regularDate = parseDate(getDateFieldValue(row, 'regular'));
+
+      const birth = getBirthdayFromId(id);
+      const age18 = birth ? addYears(birth, 18) : null;
+      const earliestJoin = age18 ? addYears(age18, 1) : null;
+      const activistLatest = joinDate ? addYears(joinDate, -1) : null;
+      const trainingCheck = earliestJoin && joinDate ? joinDate >= earliestJoin : null;
+
+      setCell(row, 'birthCell', birth ? formatDate(birth) : (id ? '身份证号有误' : ''), birth ? '' : (id ? 'result-bad' : ''));
+      setCell(row, 'age18Cell', formatDate(age18));
+      setCell(row, 'applyCell', formatDate(earliestJoin));
+      setCell(row, 'activistCell', formatDate(activistLatest));
+      setCell(row, 'devObjCell', trainingCheck === null ? '' : (trainingCheck ? '满足' : '不满足'), trainingCheck === null ? '' : (trainingCheck ? 'result-ok' : 'result-bad'));
+      setCell(row, 'ageTextCell', getAgeText(birth, joinDate));
+
+      let ageCheck = '';
+      let ageClass = '';
+      if (birth && age18 && joinDate) {
+        if (joinDate >= age18) {
+          ageCheck = '满18周岁';
+          ageClass = 'result-ok';
+        } else {
+          ageCheck = '未满18周岁';
+          ageClass = 'result-bad';
+        }
+      }
+      setCell(row, 'ageCheckCell', ageCheck, ageClass);
+
+      let transferGap = '';
+      let transferCheck = '';
+      let transferClass = '';
+      if (joinDate && regularDate) {
+        const gap = daysBetween(joinDate, regularDate);
+        transferGap = `${gap}天`;
+        if (regularDate >= addYears(joinDate, 1)) {
+          transferCheck = '满1年';
+          transferClass = 'result-ok';
+        } else {
+          transferCheck = '不满1年';
+          transferClass = 'result-bad';
+        }
+      }
+      setCell(row, 'gapCell', transferGap);
+      setCell(row, 'transferCheckCell', transferCheck, transferClass);
+
+      let conclusion = '';
+      let conclusionClass = '';
+      const notes = [];
+
+      if (!id && !joinDate && !regularDate) {
+        conclusion = '';
+      } else if (!birth) {
+        conclusion = '需核实';
+        conclusionClass = 'result-warn';
+        notes.push('身份证号无法识别出生日期');
+      } else if (!joinDate) {
+        conclusion = '需补充';
+        conclusionClass = 'result-warn';
+        notes.push('缺少入党时间');
+      } else {
+        if (joinDate < age18) notes.push('接收为预备党员时未满18周岁');
+        else if (earliestJoin && joinDate < earliestJoin) notes.push('从满18周岁至接收为预备党员不足1年，无法满足一年以上培养教育和考察条件');
+        if (regularDate && regularDate < addYears(joinDate, 1)) notes.push('入党到转正不满1年');
+        if (regularDate && regularDate < joinDate) notes.push('转正时间早于入党时间');
+        if (!regularDate) notes.push('缺少转正时间，无法审核转正间隔');
+
+        if (notes.length === 0) {
+          conclusion = '未见明显异常';
+          conclusionClass = 'result-ok';
+        } else {
+          conclusion = '需核实';
+          conclusionClass = 'result-warn';
+        }
+      }
+
+      setCell(row, 'conclusionCell', conclusion, conclusionClass);
+      setCell(row, 'noteCell', notes.join('；'));
+      saveData();
+    }
+
+    function renumber() {
+      [...tbody.querySelectorAll('tr')].forEach((tr, index) => {
+        const cell = tr.querySelector('.indexCell');
+        cell.textContent = index + 1;
+        cell.dataset.index = index + 1;
+      });
+    }
+
+    function dateFieldHtml(name, value, example) {
+      return `
+        <div class="date-field" data-date-name="${name}">
+          <input class="dateTextInput" type="text" inputmode="numeric" placeholder="${example}" value="${value || ''}">
+          <div class="date-selects">
+            <select class="yearSelect"></select>
+            <select class="monthSelect"></select>
+            <select class="daySelect"></select>
+          </div>
+          <div class="date-tip">可手动输入多种格式，也可选择年月日</div>
+        </div>
+      `;
+    }
+
+    function addRow(data = {}) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="indexCell" data-label="序号"></td>
+        <td data-label="身份证号"><input class="idInput idcard" placeholder="请输入身份证号" value="${data.id || ''}"></td>
+        <td data-label="入党时间">${dateFieldHtml('join', data.joinDate, '例：20260101、2026-01-01、2026年1月1日')}</td>
+        <td data-label="转正时间">${dateFieldHtml('regular', data.regularDate, '例：20270101、2027-01-01、2027年1月1日')}</td>
+        <td data-label="出生日期" class="birthCell muted"></td>
+        <td data-label="满18周岁日期" class="age18Cell muted"></td>
+        <td data-label="理论最早接收预备党员日期" class="applyCell muted"></td>
+        <td data-label="确定积极分子最晚日期" class="activistCell muted"></td>
+        <td data-label="一年培养条件审核" class="devObjCell"></td>
+        <td data-label="入党时年龄" class="ageTextCell muted"></td>
+        <td data-label="入党年龄审核" class="ageCheckCell"></td>
+        <td data-label="转正间隔" class="gapCell muted"></td>
+        <td data-label="转正时间审核" class="transferCheckCell"></td>
+        <td data-label="综合结论" class="conclusionCell"></td>
+        <td data-label="备注" class="noteCell muted"></td>
+        <td data-label="操作"><button class="danger" onclick="deleteRow(this)">删除</button></td>
+      `;
+      tbody.appendChild(tr);
+      tr.querySelector('.idInput').addEventListener('input', () => recalc(tr));
+      initDateField(tr.querySelector('[data-date-name="join"]'), data.joinDate, () => recalc(tr));
+      initDateField(tr.querySelector('[data-date-name="regular"]'), data.regularDate, () => recalc(tr));
+      renumber();
+      recalc(tr);
+    }
+
+    function deleteRow(button) {
+      button.closest('tr').remove();
+      renumber();
+      saveData();
+    }
+
+    function clearRows() {
+      if (!confirm('确定清空全部数据吗？')) return;
+      tbody.innerHTML = '';
+      addRow();
+      localStorage.removeItem('partyMemberReviewData');
+    }
+
+    function collectData() {
+      return [...tbody.querySelectorAll('tr')].map(row => ({
+        id: row.querySelector('.idInput').value.trim(),
+        joinDate: getDateFieldValue(row, 'join'),
+        regularDate: getDateFieldValue(row, 'regular')
+      }));
+    }
+
+    function saveData() {
+      localStorage.setItem('partyMemberReviewData', JSON.stringify(collectData()));
+    }
+
+    function loadData() {
+      const raw = localStorage.getItem('partyMemberReviewData');
+      if (!raw) {
+        addRow();
+        return;
+      }
+      try {
+        const rows = JSON.parse(raw);
+        if (Array.isArray(rows) && rows.length) rows.forEach(addRow);
+        else addRow();
+      } catch (e) {
+        addRow();
+      }
+    }
+
+    function exportCSV() {
+      const headers = [...document.querySelectorAll('thead th')]
+        .map(th => th.textContent.trim())
+        .filter(h => h !== '操作');
+      const lines = [headers.join(',')];
+      [...tbody.querySelectorAll('tr')].forEach(row => {
+        const cells = [
+          row.querySelector('.indexCell').textContent,
+          row.querySelector('.idInput').value.trim(),
+          getDateFieldValue(row, 'join'),
+          getDateFieldValue(row, 'regular'),
+          row.querySelector('.birthCell').textContent,
+          row.querySelector('.age18Cell').textContent,
+          row.querySelector('.applyCell').textContent,
+          row.querySelector('.activistCell').textContent,
+          row.querySelector('.devObjCell').textContent,
+          row.querySelector('.ageTextCell').textContent,
+          row.querySelector('.ageCheckCell').textContent,
+          row.querySelector('.gapCell').textContent,
+          row.querySelector('.transferCheckCell').textContent,
+          row.querySelector('.conclusionCell').textContent,
+          row.querySelector('.noteCell').textContent
+        ].map(v => `"${String(v || '').replace(/"/g, '""')}"`);
+        lines.push(cells.join(','));
+      });
+      const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '乾安县发展党员时间合理性审核结果.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
