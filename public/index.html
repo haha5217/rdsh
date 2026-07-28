@@ -132,6 +132,7 @@
     .question.full { grid-column: 1 / -1; }
     .question-label { font-size: 14px; font-weight: 700; }
     .question-label em { margin-left: 5px; color: var(--red); font-size: 11px; font-style: normal; }
+    .question-label em.optional { color: var(--muted); font-weight: 400; }
 
     .question input {
       width: 100%;
@@ -308,25 +309,6 @@
           </label>
 
           <label class="question">
-            <span class="question-label">身份证号 <em>必填</em></span>
-            <input id="idCard" maxlength="18" inputmode="text" autocomplete="off" placeholder="请输入15位或18位身份证号">
-            <small class="error" id="idError" hidden></small>
-          </label>
-
-          <label class="question">
-            <span class="question-label">递交入党申请书日期 <em>必填</em></span>
-            <input id="applicationDate" type="date">
-            <small class="error" id="applicationError" hidden></small>
-          </label>
-
-          <label class="question">
-            <span class="question-label">确定入党积极分子日期 <em>必填</em></span>
-            <input id="activistDate" type="date">
-            <small>申请至确定积极分子满6个月作为工作提示。</small>
-            <small class="error" id="activistError" hidden></small>
-          </label>
-
-          <label class="question">
             <span class="question-label">接收为预备党员日期 <em>必填</em></span>
             <input id="joinDate" type="date">
             <small>以支部党员大会通过接收之日为准。</small>
@@ -334,9 +316,15 @@
           </label>
 
           <label class="question">
-            <span class="question-label">转为正式党员日期 <em>必填</em></span>
+            <span class="question-label">身份证号 <em class="optional">选填</em></span>
+            <input id="idCard" maxlength="18" inputmode="text" autocomplete="off" placeholder="用于核验倒推申请时是否满18周岁">
+            <small class="error" id="idError" hidden></small>
+          </label>
+
+          <label class="question">
+            <span class="question-label">转为正式党员日期 <em class="optional">选填</em></span>
             <input id="regularDate" type="date">
-            <small>填写档案记载的转正日期。</small>
+            <small>填写后核验预备期；未填写时自动给出正常预备期满日。</small>
             <small class="error" id="regularError" hidden></small>
           </label>
         </div>
@@ -351,16 +339,16 @@
       <div class="result-head">
         <div>
           <h2 id="resultTitle"></h2>
-          <p>依据录入信息生成的程序时间筛查结果</p>
+          <p>根据接收日期倒推的合理时间边界及档案核对提示</p>
         </div>
         <div class="verdict" id="verdict"></div>
       </div>
 
       <div class="result-body">
         <div class="identity-strip">
-          <div><span>出生日期</span><strong id="birthValue"></strong></div>
-          <div><span>接收时年龄</span><strong id="ageValue"></strong></div>
-          <div><span>预备期时长</span><strong id="probationValue"></strong></div>
+          <div><span>接收预备党员日期</span><strong id="joinValue"></strong></div>
+          <div><span>申请书最晚参考日期</span><strong id="applyLatestValue"></strong></div>
+          <div><span>正常预备期满日</span><strong id="regularExpectedValue"></strong></div>
         </div>
 
         <div class="checks" id="checks"></div>
@@ -379,8 +367,6 @@
     const fields = {
       name: document.getElementById('name'),
       idCard: document.getElementById('idCard'),
-      applicationDate: document.getElementById('applicationDate'),
-      activistDate: document.getElementById('activistDate'),
       joinDate: document.getElementById('joinDate'),
       regularDate: document.getElementById('regularDate')
     };
@@ -458,19 +444,16 @@
     }
 
     function validate() {
-      const birth = birthdayFromId(fields.idCard.value);
-      const application = parseDate(fields.applicationDate.value);
-      const activist = parseDate(fields.activistDate.value);
+      const idValue = fields.idCard.value.trim();
+      const birth = idValue ? birthdayFromId(idValue) : null;
       const join = parseDate(fields.joinDate.value);
-      const regular = parseDate(fields.regularDate.value);
+      const regular = fields.regularDate.value ? parseDate(fields.regularDate.value) : null;
       showError('nameError', fields.name.value.trim() ? '' : '请填写姓名。');
-      showError('idError', birth ? '' : '请输入有效的身份证号。');
-      showError('applicationError', application ? '' : '请选择递交入党申请书日期。');
-      showError('activistError', activist ? '' : '请选择确定入党积极分子日期。');
+      showError('idError', !idValue || birth ? '' : '请输入有效的身份证号，或将此项留空。');
       showError('joinError', join ? '' : '请选择接收为预备党员日期。');
-      showError('regularError', regular ? '' : '请选择转为正式党员日期。');
-      return fields.name.value.trim() && birth && application && activist && join && regular
-        ? { birth, application, activist, join, regular }
+      showError('regularError', !fields.regularDate.value || regular ? '' : '请选择有效的转正日期，或将此项留空。');
+      return fields.name.value.trim() && (!idValue || birth) && join && (!fields.regularDate.value || regular)
+        ? { birth, join, regular }
         : null;
     }
 
@@ -480,40 +463,32 @@
     }
 
     function renderResult(data) {
-      const age18 = addYears(data.birth, 18);
-      const sixMonthPoint = addMonths(data.application, 6);
-      const cultivationEnd = addYears(data.activist, 1);
+      const activistLatest = addYears(data.join, -1);
+      const applicationLatest = addMonths(activistLatest, -6);
       const expectedRegular = addYears(data.join, 1);
-      const probationDays = daysBetween(data.join, data.regular);
       const cards = [];
       let failCount = 0;
       let warnCount = 0;
 
-      if (data.application < age18) {
-        failCount += 1;
-        cards.push(checkCard('fail', '申请入党年龄', `递交申请书时尚未满18周岁；满18周岁日期为${formatDate(age18)}。`, '不合理'));
+      cards.push(checkCard('pass', '申请至确定积极分子', `按满6个月工作提示倒推，递交入党申请书最晚参考日期为${formatDate(applicationLatest)}。实际日期应以党员档案为准。`, '已推算'));
+      cards.push(checkCard('pass', '积极分子培养考察', `按至少一年培养考察倒推，确定入党积极分子最晚参考日期为${formatDate(activistLatest)}。`, '已推算'));
+      cards.push(checkCard('warn', '确定发展对象', `应在${formatDate(data.join)}接收为预备党员前按程序完成。该环节至接收预备党员没有全国统一固定最短期限，需结合档案核对。`, '待核对'));
+
+      if (data.birth) {
+        const age18 = addYears(data.birth, 18);
+        if (applicationLatest < age18) {
+          failCount += 1;
+          cards.push(checkCard('fail', '申请入党年龄', `按正常程序倒推，申请书最晚参考日期${formatDate(applicationLatest)}早于满18周岁日期${formatDate(age18)}。`, '不合理'));
+        } else {
+          cards.push(checkCard('pass', '申请入党年龄', `按最晚参考日期倒推，申请时为${ageText(data.birth, applicationLatest)}。`, '未见异常'));
+        }
       } else {
-        cards.push(checkCard('pass', '申请入党年龄', `递交申请书时为${ageText(data.birth, data.application)}。`, '符合'));
+        cards.push(checkCard('warn', '申请入党年龄', '未填写身份证号，无法核验按正常程序倒推时是否已满18周岁。', '未核验'));
       }
 
-      if (data.activist < data.application) {
-        failCount += 1;
-        cards.push(checkCard('fail', '申请至确定积极分子', '确定入党积极分子日期早于递交入党申请书日期。', '不合理'));
-      } else if (data.activist < sixMonthPoint) {
-        warnCount += 1;
-        cards.push(checkCard('warn', '申请至确定积极分子', `间隔${daysBetween(data.application, data.activist)}天，未达到满6个月的提示口径。`, '需核实'));
-      } else {
-        cards.push(checkCard('pass', '申请至确定积极分子', `已达到满6个月的提示口径，满6个月日期为${formatDate(sixMonthPoint)}。`, '符合提示'));
-      }
-
-      if (data.join < cultivationEnd) {
-        failCount += 1;
-        cards.push(checkCard('fail', '积极分子培养考察', `未满一年；达到一年培养期限的日期为${formatDate(cultivationEnd)}。`, '不合理'));
-      } else {
-        cards.push(checkCard('pass', '积极分子培养考察', `从确定入党积极分子到接收为预备党员共${daysBetween(data.activist, data.join)}天。`, '符合'));
-      }
-
-      if (data.regular < data.join) {
+      if (!data.regular) {
+        cards.push(checkCard('warn', '转正时间', `正常预备期满日为${formatDate(expectedRegular)}；未填写实际转正日期，无法核验转正间隔。`, '待核对'));
+      } else if (data.regular < data.join) {
         failCount += 1;
         cards.push(checkCard('fail', '转正时间', '转正日期早于接收为预备党员日期。', '不合理'));
       } else if (data.regular < expectedRegular) {
@@ -526,12 +501,13 @@
         cards.push(checkCard('pass', '转正时间', `转正日期与正常预备期满日${formatDate(expectedRegular)}一致。`, '符合'));
       }
 
-      const verdict = failCount ? '不合理' : warnCount ? '需核实' : '合理';
+      const hasOptionalEvidence = Boolean(data.birth && data.regular);
+      const verdict = failCount ? '不合理' : warnCount ? '需核实' : hasOptionalEvidence ? '未见异常' : '推算完成';
       document.getElementById('resultTitle').textContent = `${fields.name.value.trim()}审核结果`;
       document.getElementById('verdict').textContent = verdict;
-      document.getElementById('birthValue').textContent = formatDate(data.birth);
-      document.getElementById('ageValue').textContent = ageText(data.birth, data.join);
-      document.getElementById('probationValue').textContent = `${probationDays}天`;
+      document.getElementById('joinValue').textContent = formatDate(data.join);
+      document.getElementById('applyLatestValue').textContent = formatDate(applicationLatest);
+      document.getElementById('regularExpectedValue').textContent = formatDate(expectedRegular);
       document.getElementById('checks').innerHTML = cards.join('');
       formPanel.hidden = true;
       resultPanel.hidden = false;
@@ -546,8 +522,6 @@
         localStorage.setItem('rdshSingleReview', JSON.stringify({
           name: fields.name.value.trim(),
           idCard: fields.idCard.value.trim(),
-          applicationDate: fields.applicationDate.value,
-          activistDate: fields.activistDate.value,
           joinDate: fields.joinDate.value,
           regularDate: fields.regularDate.value
         }));
